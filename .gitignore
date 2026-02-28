@@ -33,3 +33,7 @@ models/weights/deepfake_model/checkpoint-*/
 build/
 dist/
 *.egg-info/
+
+models/weights/
+venv/
+__pycache__/
