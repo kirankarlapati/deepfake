@@ -9,7 +9,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from datetime import datetime
 from pathlib import Path
 import os
-from typing import Dict
+from typing import Dict, List
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -51,6 +51,133 @@ def generate_sync_graph(audio_signal, lip_signal, mismatch_timestamps):
 
 
 ############################################################
+#  GENERATE KEY EVIDENCE FRAMES SECTION
+############################################################
+def build_key_frames_section(story, key_frames: Dict[str, List[Dict]], styles, final_verdict: str = "UNKNOWN"):
+    """
+    Adds TWO 'Key Evidence Frames' sections to the PDF story:
+    - Order depends on final_verdict:
+      * FAKE: Most Suspicious first, then Most Authentic
+      * REAL: Most Authentic first, then Most Suspicious
+    
+    Always shows both sections regardless of verdict.
+    """
+    heading_style = ParagraphStyle(
+        'KeyFrameHeading',
+        parent=styles['Heading2'],
+        fontSize=16,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=8,
+        spaceBefore=12,
+        fontName='Helvetica-Bold'
+    )
+
+    caption_style = ParagraphStyle(
+        'FrameCaption',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.HexColor('#555555'),
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+
+    note_style = ParagraphStyle(
+        'FrameNote',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=TA_LEFT,
+        fontName='Helvetica-Oblique',
+        spaceAfter=10
+    )
+
+    most_fake_frames = key_frames.get("most_fake", [])
+    most_real_frames = key_frames.get("most_real", [])
+
+    # Helper function to build a section
+    def build_section(section_num: int, title: str, description: str, frames: List[Dict], border_color: str, score_type: str):
+        story.append(Paragraph(f"Section {section_num}: {title}", heading_style))
+        story.append(Paragraph(description, note_style))
+
+        if not frames:
+            story.append(Paragraph(f"No {title.lower()} available.", note_style))
+        else:
+            img_cells = []
+            caption_cells = []
+
+            for kf in frames:
+                img_path = kf.get("path", "")
+                frame_num = kf.get("frame_number", "?")
+                score = kf.get("fake_score" if score_type == "fake" else "real_score", 0)
+
+                if os.path.exists(img_path):
+                    img = Image(img_path, width=1.8*inch, height=1.35*inch)
+                    img_cells.append(img)
+                else:
+                    img_cells.append(Paragraph("Frame not found", caption_style))
+
+                score_label = "Fake Score" if score_type == "fake" else "Real Score"
+                caption_cells.append(
+                    Paragraph(f"Frame #{frame_num}<br/>{score_label}: {score:.1f}%", caption_style)
+                )
+
+            # Pad to 3 if fewer frames
+            while len(img_cells) < 3:
+                img_cells.append(Paragraph("", caption_style))
+                caption_cells.append(Paragraph("", caption_style))
+
+            frame_table = Table(
+                [img_cells, caption_cells],
+                colWidths=[2.1*inch, 2.1*inch, 2.1*inch]
+            )
+            frame_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8f9fa')),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor(border_color)),
+            ]))
+
+            story.append(frame_table)
+
+        story.append(Spacer(1, 0.3 * inch))
+
+    # ============================================================
+    # ORDER SECTIONS BASED ON VERDICT
+    # ============================================================
+    if final_verdict == "FAKE":
+        # Show Most Suspicious FIRST, then Most Authentic
+        build_section(
+            1, "Most Suspicious Moments",
+            "The frames below show the moments with the highest fake confidence scores, "
+            "representing the strongest evidence of potential deepfake manipulation.",
+            most_fake_frames, '#e74c3c', 'fake'
+        )
+        build_section(
+            2, "Most Authentic Moments",
+            "The frames below show the moments with the highest authenticity confidence, "
+            "representing the strongest evidence that these portions of the video are genuine.",
+            most_real_frames, '#27ae60', 'real'
+        )
+    else:
+        # Show Most Authentic FIRST, then Most Suspicious (for REAL or UNKNOWN)
+        build_section(
+            1, "Most Authentic Moments",
+            "The frames below show the moments with the highest authenticity confidence, "
+            "representing the strongest evidence that these portions of the video are genuine.",
+            most_real_frames, '#27ae60', 'real'
+        )
+        build_section(
+            2, "Most Suspicious Moments",
+            "The frames below show the moments with the highest fake confidence scores, "
+            "representing the strongest evidence of potential deepfake manipulation.",
+            most_fake_frames, '#e74c3c', 'fake'
+        )
+
+
+############################################################
 #  GENERATE PDF REPORT
 ############################################################
 def generate_report(
@@ -63,6 +190,7 @@ def generate_report(
 ) -> str:
     """
     Generates a professional PDF forensics report using ReportLab.
+    Now includes Key Evidence Frames section.
     
     Args:
         video_path: Path to analyzed video file
@@ -150,6 +278,7 @@ def generate_report(
     average_fake_score = visual_results.get("average_fake_score", 0.0)
     total_frames = visual_results.get("total_frames_analyzed", 0)
     faces_detected = visual_results.get("faces_detected", 0)
+    key_frames = visual_results.get("key_frames", {"most_fake": [], "most_real": []})
     
     audio_verdict = audio_results.get("verdict", "UNKNOWN")
     audio_sync_score = audio_results.get("sync_score", 0.0)
@@ -163,7 +292,7 @@ def generate_report(
     # ============================================================
     # HEADER: DeepTrace Logo/Title
     # ============================================================
-    story.append(Paragraph("🔍 DeepTrace", title_style))
+    story.append(Paragraph("DeepTrace", title_style))
     story.append(Paragraph("AI-Powered Deepfake Forensics Analysis", subtitle_style))
     story.append(Spacer(1, 0.3 * inch))
     
@@ -204,13 +333,13 @@ def generate_report(
     # Determine color based on verdict
     if overall_verdict == "FAKE":
         verdict_color = colors.HexColor('#e74c3c')  # RED
-        verdict_text = "⚠️ DEEPFAKE DETECTED"
+        verdict_text = "DEEPFAKE DETECTED"
     elif overall_verdict == "REAL":
         verdict_color = colors.HexColor('#27ae60')  # GREEN
-        verdict_text = "✓ AUTHENTIC VIDEO"
+        verdict_text = "AUTHENTIC VIDEO"
     else:
         verdict_color = colors.HexColor('#f39c12')  # ORANGE
-        verdict_text = "? INCONCLUSIVE"
+        verdict_text = "INCONCLUSIVE"
     
     verdict_style = ParagraphStyle(
         'VerdictStyle',
@@ -224,6 +353,11 @@ def generate_report(
     
     story.append(Paragraph(verdict_text, verdict_style))
     story.append(Spacer(1, 0.3 * inch))
+    
+    # ============================================================
+    # KEY EVIDENCE FRAMES - Always show both sections
+    # ============================================================
+    build_key_frames_section(story, key_frames, styles, final_verdict)
     
     # ============================================================
     # ANALYSIS SCORES
@@ -284,7 +418,9 @@ def generate_report(
         noise_scores = visual_results.get("noise_scores", [])
         fps = 30  # default
         
-        table_data = [["Time (s)", "Frame", "Truthness Score %", "Noise Level"]]
+        # Dynamic column header based on verdict
+        score_column_header = "Fake Score %" if final_verdict == "FAKE" else "Truth Score %"
+        table_data = [["Time (s)", "Frame", score_column_header, "Noise Level"]]
         
         for idx, (frame, noise) in enumerate(zip(frame_results, noise_scores)):
             timestamp = round(frame["frame_number"] / fps, 2)

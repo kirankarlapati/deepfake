@@ -21,99 +21,293 @@ st.set_page_config(
     page_title="DeepTrace - Deepfake Forensics",
     page_icon="🔍",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 
 ############################################################
-#  CUSTOM CSS FOR DARK THEME
+#  MATERIAL DESIGN 3 (MATERIAL YOU) STYLING
 ############################################################
 st.markdown("""
 <style>
-    /* Main app styling */
-    .main {
-        background-color: #0e1117;
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    
+    /* Material Design 3 Color Tokens - Dark Theme */
+    :root {
+        --md-sys-color-primary: #A8C7FA;
+        --md-sys-color-on-primary: #062E6F;
+        --md-sys-color-primary-container: #1E4489;
+        --md-sys-color-on-primary-container: #D6E3FF;
+        
+        --md-sys-color-secondary: #BDC7DC;
+        --md-sys-color-on-secondary: #283141;
+        --md-sys-color-secondary-container: #3E4759;
+        --md-sys-color-on-secondary-container: #D9E3F8;
+        
+        --md-sys-color-error: #FFB4AB;
+        --md-sys-color-on-error: #690005;
+        --md-sys-color-error-container: #93000A;
+        --md-sys-color-on-error-container: #FFDAD6;
+        
+        --md-sys-color-success: #7FDB8C;
+        --md-sys-color-on-success: #003910;
+        --md-sys-color-success-container: #005319;
+        --md-sys-color-on-success-container: #9CF7A6;
+        
+        --md-sys-color-surface: #1A1C1E;
+        --md-sys-color-surface-dim: #111316;
+        --md-sys-color-surface-bright: #37393C;
+        --md-sys-color-surface-container-lowest: #0C0E10;
+        --md-sys-color-surface-container-low: #1A1C1E;
+        --md-sys-color-surface-container: #1E2022;
+        --md-sys-color-surface-container-high: #282A2D;
+        --md-sys-color-surface-container-highest: #333538;
+        
+        --md-sys-color-on-surface: #E3E2E6;
+        --md-sys-color-on-surface-variant: #C4C6D0;
+        --md-sys-color-outline: #8E9099;
+        --md-sys-color-outline-variant: #44464F;
     }
     
-    /* Title styling */
+    /* Base App Styling */
+    .main {
+        background-color: var(--md-sys-color-surface);
+        font-family: 'Roboto', sans-serif;
+    }
+    
+    .stApp {
+        background-color: var(--md-sys-color-surface);
+        color: var(--md-sys-color-on-surface);
+    }
+    
+    /* Material Design 3 Typography Scale */
+    h1, h2, h3 {
+        font-family: 'Roboto', sans-serif;
+        color: var(--md-sys-color-on-surface);
+    }
+    
+    /* Title - Display Large */
     .big-title {
-        font-size: 4rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: 3.5rem;
+        font-weight: 400;
+        line-height: 4rem;
+        letter-spacing: -0.25px;
+        color: var(--md-sys-color-primary);
         text-align: center;
         margin-bottom: 0.5rem;
     }
     
+    /* Subtitle - Title Large */
     .subtitle {
-        font-size: 1.3rem;
-        color: #b0b0b0;
+        font-size: 1.375rem;
+        font-weight: 400;
+        line-height: 1.75rem;
+        color: var(--md-sys-color-on-surface-variant);
         text-align: center;
         margin-bottom: 2rem;
     }
     
-    /* Metric cards */
+    /* Material Design 3 Buttons - Filled Buttons */
+    .stButton > button {
+        background-color: var(--md-sys-color-primary);
+        color: var(--md-sys-color-on-primary);
+        border: none;
+        border-radius: 20px;
+        padding: 0.625rem 1.5rem;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        font-size: 0.875rem;
+        letter-spacing: 0.1px;
+        text-transform: none;
+        box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+    
+    .stButton > button:hover {
+        background-color: #B8D4FF;
+        box-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stButton > button:active {
+        box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Download Button - Filled Tonal Button */
+    .stDownloadButton > button {
+        background-color: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+        border: none;
+        border-radius: 20px;
+        padding: 0.625rem 1.5rem;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        font-size: 0.875rem;
+        letter-spacing: 0.1px;
+        box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+    
+    .stDownloadButton > button:hover {
+        background-color: #4A5468;
+        box-shadow: 0 2px 6px 2px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Material Design 3 Cards - Elevated Surface */
     .metric-card {
-        background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+        background-color: var(--md-sys-color-surface-container-high);
         padding: 1.5rem;
-        border-radius: 10px;
-        border: 1px solid #3d3d3d;
+        border-radius: 16px;
         margin: 1rem 0;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
     }
     
+    /* Error State Badge - Material 3 */
     .fake-badge {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 10px;
+        background-color: var(--md-sys-color-error-container);
+        color: var(--md-sys-color-on-error-container);
+        padding: 1.5rem 2rem;
+        border-radius: 28px;
         font-size: 2rem;
-        font-weight: bold;
+        font-weight: 500;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        box-shadow: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
     }
     
+    /* Success State Badge - Material 3 */
     .real-badge {
-        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 10px;
+        background-color: var(--md-sys-color-success-container);
+        color: var(--md-sys-color-on-success-container);
+        padding: 1.5rem 2rem;
+        border-radius: 28px;
         font-size: 2rem;
-        font-weight: bold;
+        font-weight: 500;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+        box-shadow: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
     }
     
-    /* Explanation box */
+    /* Gauge Container - Filled Card */
+    .gauge-container {
+        background-color: var(--md-sys-color-surface-container-highest);
+        padding: 2rem;
+        border-radius: 24px;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+        text-align: center;
+    }
+    
+    /* Explanation Box - Outlined Card */
     .explanation-box {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        background-color: var(--md-sys-color-surface-container);
         padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 4px solid #667eea;
-        color: #ecf0f1;
-        font-size: 1.1rem;
-        line-height: 1.8;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        border-radius: 16px;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        color: var(--md-sys-color-on-surface);
+        font-size: 1rem;
+        line-height: 1.5rem;
+        font-weight: 400;
     }
     
-    /* Info box */
+    /* Info Box */
     .info-box {
-        background: #1a1d23;
+        background-color: var(--md-sys-color-surface-container-low);
         padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #3d3d3d;
+        border-radius: 12px;
+        border: 1px solid var(--md-sys-color-outline-variant);
         margin: 1rem 0;
     }
     
-    /* Status indicators */
+    /* Video Preview Container - Elevated */
+    .video-preview {
+        background-color: var(--md-sys-color-surface-container);
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin: 1rem 0;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Status Indicators */
     .status-online {
-        color: #27ae60;
-        font-weight: bold;
+        color: var(--md-sys-color-success);
+        font-weight: 500;
     }
     
     .status-offline {
-        color: #e74c3c;
-        font-weight: bold;
+        color: var(--md-sys-color-error);
+        font-weight: 500;
+    }
+    
+    /* Progress Bar - Material 3 */
+    .stProgress > div > div > div {
+        background-color: var(--md-sys-color-primary);
+    }
+    
+    .stProgress > div > div {
+        background-color: var(--md-sys-color-surface-container-highest);
+    }
+    
+    /* Metric Styling */
+    [data-testid="stMetricValue"] {
+        color: var(--md-sys-color-on-surface);
+        font-size: 2rem;
+        font-weight: 400;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--md-sys-color-on-surface-variant);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    /* File Uploader - Material 3 */
+    [data-testid="stFileUploader"] {
+        background-color: var(--md-sys-color-surface-container-low);
+        border: 2px dashed var(--md-sys-color-outline);
+        border-radius: 16px;
+        padding: 2rem;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: var(--md-sys-color-primary);
+        background-color: var(--md-sys-color-surface-container);
+    }
+    
+    /* Divider - Material 3 */
+    hr {
+        border: none;
+        border-top: 1px solid var(--md-sys-color-outline-variant);
+        margin: 2rem 0;
+    }
+    
+    /* Expander - Material 3 */
+    .streamlit-expander {
+        background-color: var(--md-sys-color-surface-container);
+        border: 1px solid var(--md-sys-color-outline-variant);
+        border-radius: 12px;
+        margin: 0.5rem 0;
+    }
+    
+    /* Sidebar - Material 3 Navigation Drawer */
+    [data-testid="stSidebar"] {
+        background-color: var(--md-sys-color-surface-container-low);
+        border-right: 1px solid var(--md-sys-color-outline-variant);
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+        color: var(--md-sys-color-on-surface);
+    }
+    
+    /* Code Block - Material 3 */
+    code {
+        background-color: var(--md-sys-color-surface-container-highest);
+        color: var(--md-sys-color-primary);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'Roboto Mono', monospace;
+    }
+    
+    .stCodeBlock {
+        background-color: var(--md-sys-color-surface-container-highest);
+        border-radius: 12px;
+        border: 1px solid var(--md-sys-color-outline-variant);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -129,6 +323,55 @@ def check_backend_health():
         return response.status_code == 200
     except:
         return False
+
+
+def create_confidence_gauge(confidence, verdict):
+    """Create a color-coded confidence gauge visualization with Material Design 3 colors."""
+    # Determine color based on verdict and confidence using MD3 tokens
+    if verdict == "FAKE":
+        color = "#FFB4AB"  # md-sys-color-error
+        label_color = "#FFB4AB"
+    elif verdict == "REAL":
+        color = "#7FDB8C"  # md-sys-color-success
+        label_color = "#7FDB8C"
+    else:
+        color = "#BDC7DC"  # md-sys-color-secondary
+        label_color = "#BDC7DC"
+    
+    # Create gauge chart with Material Design 3 styling
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = confidence,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': "Confidence Score", 'font': {'size': 20, 'color': '#E3E2E6', 'family': 'Roboto'}},
+        number = {'suffix': "%", 'font': {'size': 44, 'color': label_color, 'family': 'Roboto'}},
+        gauge = {
+            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "#C4C6D0"},
+            'bar': {'color': label_color, 'thickness': 0.7},
+            'bgcolor': "#1E2022",
+            'borderwidth': 0,
+            'steps': [
+                {'range': [0, 30], 'color': 'rgba(127, 219, 140, 0.15)'},
+                {'range': [30, 70], 'color': 'rgba(189, 199, 220, 0.15)'},
+                {'range': [70, 100], 'color': 'rgba(255, 180, 171, 0.15)'}
+            ],
+            'threshold': {
+                'line': {'color': "#E3E2E6", 'width': 3},
+                'thickness': 0.8,
+                'value': 70
+            }
+        }
+    ))
+    
+    fig.update_layout(
+        paper_bgcolor = "#282A2D",
+        plot_bgcolor = "#282A2D",
+        font = {'color': "#E3E2E6", 'family': "Roboto"},
+        height = 300,
+        margin = dict(l=20, r=20, t=60, b=20)
+    )
+    
+    return fig
 
 
 def analyze_video(video_file):
@@ -179,20 +422,21 @@ def download_pdf(pdf_filename):
 #  MAIN APP
 ############################################################
 def main():
-    # Header
+    # Material Design 3 Header
     st.markdown('<h1 class="big-title">🔍 DeepTrace</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">AI-Powered Deepfake Forensics Analysis</p>', unsafe_allow_html=True)
     
-    # Prototype Example Section
+    # Material Design 3 Example Section - Elevated Card
     st.markdown("")
     example_col1, example_col2, example_col3 = st.columns([1, 2, 1])
     with example_col2:
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                    padding: 1.5rem; border-radius: 10px; text-align: center; 
-                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);'>
-            <h3 style='color: white; margin: 0;'>📊 Example Forensics Report</h3>
-            <p style='color: #e0e0e0; margin-top: 0.5rem;'>See what DeepTrace can do for judges and evaluators</p>
+        <div style='background-color: var(--md-sys-color-primary-container); 
+                    color: var(--md-sys-color-on-primary-container);
+                    padding: 1.5rem; border-radius: 16px; text-align: center; 
+                    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);'>
+            <h3 style='color: var(--md-sys-color-on-primary-container); margin: 0; font-weight: 500;'>📊 Example Forensics Report</h3>
+            <p style='color: var(--md-sys-color-on-primary-container); margin-top: 0.5rem; opacity: 0.9;'>See what DeepTrace can do for judges and evaluators</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -200,13 +444,13 @@ def main():
         
         # Load and display prototype PDF
         try:
-            with open("r8.pdf", "rb") as pdf_file:
+            with open("../r14.pdf", "rb") as pdf_file:
                 prototype_pdf = pdf_file.read()
             
             col_a, col_b, col_c = st.columns([1, 2, 1])
             with col_b:
                 st.download_button(
-                    label="📥 Download Example Report (r8.pdf)",
+                    label="📥 Download Example Report (r14.pdf)",
                     data=prototype_pdf,
                     file_name="DeepTrace_Example_Report.pdf",
                     mime="application/pdf",
@@ -253,6 +497,19 @@ def main():
         with col3:
             st.metric("🎬 Format", uploaded_file.name.split('.')[-1].upper())
         
+        st.markdown("")
+        
+        # Video Preview Section
+        st.markdown("### 🎥 Video Preview")
+        st.markdown('<div class="video-preview">', unsafe_allow_html=True)
+        
+        col_preview1, col_preview2, col_preview3 = st.columns([1, 2, 1])
+        with col_preview2:
+            st.video(uploaded_file)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("")
+        
         # Analyze button
         st.markdown("")
         
@@ -265,36 +522,50 @@ def main():
                 st.error("❌ Cannot analyze: Backend server is offline")
                 return
             
-            # Progress bar
+            # Progress section with enhanced styling
+            st.markdown("---")
+            st.markdown("### ⚙️ Analysis in Progress")
+            
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            # Analysis stages
+            # Analysis stages with emojis
             stages = [
-                "Uploading video...",
-                "Extracting frames...",
-                "Running visual analysis...",
-                "Analyzing audio-visual sync...",
-                "Generating AI explanation...",
-                "Creating PDF report...",
-                "Complete!"
+                ("📤", "Uploading video to server..."),
+                ("🎞️", "Extracting frames from video..."),
+                ("👁️", "Running visual deepfake detection..."),
+                ("🎵", "Analyzing audio-visual synchronization..."),
+                ("🤖", "Generating AI forensics explanation..."),
+                ("📄", "Creating detailed PDF report..."),
             ]
             
-            # Simulate progress (since we can't get real-time updates from backend)
-            for i, stage in enumerate(stages[:-1]):
+            # Simulate progress with styled messages
+            for i, (emoji, stage) in enumerate(stages):
                 progress = int((i / len(stages)) * 100)
                 progress_bar.progress(progress)
-                status_text.markdown(f"**{stage}**")
+                status_text.markdown(
+                    f'<div style="text-align: center; font-size: 1.1rem; color: var(--md-sys-color-primary); padding: 1rem; font-family: Roboto;">'
+                    f'{emoji} <b style="font-weight: 500;">{stage}</b></div>',
+                    unsafe_allow_html=True
+                )
                 time.sleep(0.5)
             
             # Actual analysis
-            status_text.markdown("**Processing video... This may take a few minutes.**")
+            status_text.markdown(
+                f'<div style="text-align: center; font-size: 1.1rem; color: var(--md-sys-color-on-surface); padding: 1rem; font-family: Roboto;">'
+                f'🔬 <b style="font-weight: 500;">Deep analysis in progress... This may take a few minutes.</b></div>',
+                unsafe_allow_html=True
+            )
             result, error = analyze_video(uploaded_file)
             
-            # Complete progress
+            # Complete progress with success animation
             progress_bar.progress(100)
-            status_text.markdown("**✅ Analysis Complete!**")
-            time.sleep(1)
+            status_text.markdown(
+                f'<div style="text-align: center; font-size: 1.2rem; color: var(--md-sys-color-success); padding: 1rem; font-family: Roboto;">'
+                f'✅ <b style="font-weight: 500;">Analysis Complete!</b></div>',
+                unsafe_allow_html=True
+            )
+            time.sleep(1.5)
             progress_bar.empty()
             status_text.empty()
             
@@ -345,13 +616,21 @@ def main():
                 st.warning("⚠️ INCONCLUSIVE")
             
             st.markdown("")
-            st.metric("Overall Confidence", f"{confidence:.2f}%", 
-                     delta=None if verdict == "UNKNOWN" else None)
+            
+            # Additional metrics
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.metric("Max Fake Score", f"{visual_analysis.get('max_fake_score', 0):.2f}%",
+                         help="Highest fake score detected across all frames")
+            with col_b:
+                st.metric("Faces Detected", f"{visual_analysis.get('faces_detected', 0)} / {visual_analysis.get('total_frames_analyzed', 0)} frames")
         
         with col2:
-            st.metric("Max Fake Score", f"{visual_analysis.get('max_fake_score', 0):.2f}%",
-                     help="Highest fake score detected across all frames")
-            st.metric("Faces Detected", f"{visual_analysis.get('faces_detected', 0)} / {visual_analysis.get('total_frames_analyzed', 0)} frames")
+            # Color-coded confidence gauge
+            st.markdown('<div class="gauge-container">', unsafe_allow_html=True)
+            gauge_fig = create_confidence_gauge(confidence, verdict)
+            st.plotly_chart(gauge_fig, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown("")
         
@@ -368,9 +647,18 @@ def main():
             noise_normalized = [n / max_noise * 100 for n in noise]
             
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=frames, y=confidence, name="Fake Confidence %", line=dict(color="red", width=2)))
-            fig.add_trace(go.Scatter(x=frames, y=noise_normalized, name="Noise Level (normalized)", line=dict(color="purple", width=2, dash="dot")))
-            fig.update_layout(title="Fake Confidence vs Noise Level Per Frame", xaxis_title="Frame Number", yaxis_title="Score (0-100)", height=350, template="plotly_dark", hovermode='x unified')
+            fig.add_trace(go.Scatter(x=frames, y=confidence, name="Fake Confidence %", line=dict(color="#FFB4AB", width=2)))
+            fig.add_trace(go.Scatter(x=frames, y=noise_normalized, name="Noise Level (normalized)", line=dict(color="#A8C7FA", width=2, dash="dot")))
+            fig.update_layout(
+                title="Fake Confidence vs Noise Level Per Frame",
+                xaxis_title="Frame Number",
+                yaxis_title="Score (0-100)",
+                height=350,
+                paper_bgcolor="#1A1C1E",
+                plot_bgcolor="#1A1C1E",
+                font=dict(family="Roboto", color="#E3E2E6"),
+                hovermode='x unified'
+            )
             
             st.plotly_chart(fig, width="stretch")
             
@@ -418,10 +706,20 @@ def main():
             mismatch_audio = [audio_sig[min(int(m["frame"]), len(audio_sig)-1)] for m in audio_analysis.get("mismatch_timestamps", [])]
 
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=timestamps, y=audio_sig, name="Audio Energy", line=dict(color="royalblue", width=2)))
-            fig.add_trace(go.Scatter(x=timestamps, y=lip_sig, name="Lip Movement", line=dict(color="orange", width=2)))
-            fig.add_trace(go.Scatter(x=mismatch_times, y=mismatch_audio, mode="markers", name="Mismatch", marker=dict(color="red", size=8, symbol="x")))
-            fig.update_layout(title="Audio Energy vs Lip Movement Over Time", xaxis_title="Time (seconds)", yaxis_title="Normalized Value (0-1)", legend=dict(x=0, y=1), height=350, template="plotly_dark", hovermode='x unified')
+            fig.add_trace(go.Scatter(x=timestamps, y=audio_sig, name="Audio Energy", line=dict(color="#A8C7FA", width=2)))
+            fig.add_trace(go.Scatter(x=timestamps, y=lip_sig, name="Lip Movement", line=dict(color="#BDC7DC", width=2)))
+            fig.add_trace(go.Scatter(x=mismatch_times, y=mismatch_audio, mode="markers", name="Mismatch", marker=dict(color="#FFB4AB", size=8, symbol="x")))
+            fig.update_layout(
+                title="Audio Energy vs Lip Movement Over Time",
+                xaxis_title="Time (seconds)",
+                yaxis_title="Normalized Value (0-1)",
+                legend=dict(x=0, y=1),
+                height=350,
+                paper_bgcolor="#1A1C1E",
+                plot_bgcolor="#1A1C1E",
+                font=dict(family="Roboto", color="#E3E2E6"),
+                hovermode='x unified'
+            )
             
             st.plotly_chart(fig, width="stretch")
         
@@ -444,7 +742,7 @@ def main():
                 y=audio_energy,
                 mode='lines+markers',
                 name='Audio Energy',
-                line=dict(color='#e74c3c', width=2),
+                line=dict(color='#FFB4AB', width=2),
                 marker=dict(size=6)
             ))
             
@@ -453,7 +751,7 @@ def main():
                 y=lip_movement,
                 mode='lines+markers',
                 name='Lip Movement',
-                line=dict(color='#3498db', width=2),
+                line=dict(color='#A8C7FA', width=2),
                 marker=dict(size=6)
             ))
             
@@ -461,7 +759,9 @@ def main():
                 title="Audio Energy vs Lip Movement at Suspicious Frames",
                 xaxis_title="Timestamp (seconds)",
                 yaxis_title="Normalized Value (0-1)",
-                template="plotly_dark",
+                paper_bgcolor="#1A1C1E",
+                plot_bgcolor="#1A1C1E",
+                font=dict(family="Roboto", color="#E3E2E6"),
                 hovermode='x unified',
                 height=400
             )
@@ -534,33 +834,81 @@ def main():
 ############################################################
 def sidebar():
     with st.sidebar:
-        st.markdown("## About DeepTrace")
+        st.markdown("# 🔍 DeepTrace")
+        st.markdown("*AI-Powered Deepfake Forensics*")
+        st.markdown("---")
+        
+        st.markdown("## 📖 About")
         st.markdown("""
-        DeepTrace is an AI-powered deepfake forensics tool that analyzes videos using:
-        
-        **🎭 Visual Analysis**
-        - Deep learning model for frame-by-frame detection
-        - Face detection and cropping
-        - Threshold-based verdict (>70% = fake)
-        
-        **🎵 Audio-Visual Sync**
-        - MediaPipe for lip movement tracking
-        - Librosa for audio energy analysis
-        - Correlation-based mismatch detection
-        
-        **🤖 AI Explanation**
-        - Ollama LLM (llama3.2) for forensics explanation
-        - Plain English interpretation
-        
-        **📄 PDF Report**
-        - Professional forensics documentation
-        - Includes all metrics and timestamps
+        DeepTrace is an advanced AI forensics tool that detects deepfake videos 
+        using multi-modal analysis techniques.
         """)
         
         st.markdown("---")
-        st.markdown("### Quick Start")
+        st.markdown("## ⚙️ Technologies")
+        
+        with st.expander("🎭 Visual Analysis"):
+            st.markdown("""
+            - **Deep Learning Model**: Frame-by-frame detection
+            - **Face Detection**: Automatic face cropping
+            - **Threshold**: >70% confidence = deepfake
+            - **Noise Analysis**: Compression artifact detection
+            """)
+        
+        with st.expander("🎵 Audio-Visual Sync"):
+            st.markdown("""
+            - **MediaPipe**: Lip movement tracking
+            - **Librosa**: Audio energy analysis
+            - **Correlation**: Mismatch detection algorithm
+            - **Timeline**: Frame-by-frame synchronization
+            """)
+        
+        with st.expander("🤖 AI Explanation"):
+            st.markdown("""
+            - **LLM Model**: Ollama (llama3.2)
+            - **Natural Language**: Plain English forensics
+            - **Context-Aware**: Analyzes all metrics
+            - **Professional**: Court-ready explanations
+            """)
+        
+        with st.expander("📄 PDF Report"):
+            st.markdown("""
+            - **Comprehensive**: All metrics & timestamps
+            - **Professional**: Court-ready documentation
+            - **Visualizations**: Charts & graphs
+            - **Downloadable**: PDF format
+            """)
+        
+        st.markdown("---")
+        st.markdown("## 🚀 Quick Start")
+        
+        st.markdown("**1. Start Backend Server:**")
         st.code("python backend/main.py", language="bash")
+        
+        st.markdown("**2. Launch Frontend:**")
         st.code("streamlit run frontend/app.py", language="bash")
+        
+        st.markdown("**3. Upload & Analyze:**")
+        st.markdown("Upload a video and click **Analyze**!")
+        
+        st.markdown("---")
+        st.markdown("## 📊 Supported Formats")
+        st.markdown("✅ MP4, AVI, MOV")
+        st.markdown("💾 Max 200MB recommended")
+        
+        st.markdown("---")
+        st.markdown("## 💡 Tips")
+        st.info("""
+        **For Best Results:**
+        - Use high-quality videos
+        - Ensure good lighting
+        - Clear facial visibility
+        - Minimal background noise
+        """)
+        
+        st.markdown("---")
+        st.markdown("### 🛡️ Powered by AI")
+        st.caption("Version 1.0 | © 2026 DeepTrace")
 
 
 ############################################################

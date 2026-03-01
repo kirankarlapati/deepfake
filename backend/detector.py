@@ -6,6 +6,8 @@ import torch
 import numpy as np
 import cv2
 from typing import List, Dict, Tuple
+import tempfile
+import os
 
 ############################################################
 #  MODEL PATH
@@ -162,11 +164,98 @@ def extract_frames(video_path: str, frame_interval: int = 5) -> List[Tuple[int, 
 
 
 ############################################################
+#  SAVE TOP 3 KEY EVIDENCE FRAMES
+############################################################
+def save_key_frames(
+    frames_data: list,          # list of (frame_number, frame_image, fake_score)
+    output_dir: str = None
+) -> Dict[str, List[Dict]]:
+    """
+    Saves top 6 key frames split into two categories:
+    - most_fake: 3 frames with HIGHEST fake score (most suspicious)
+    - most_real: 3 frames with LOWEST fake score (most authentic)
+
+    Returns dict with two lists: 
+    {
+        "most_fake": [{"path": str, "frame_number": int, "fake_score": float, "real_score": float}, ...],
+        "most_real": [{"path": str, "frame_number": int, "fake_score": float, "real_score": float}, ...]
+    }
+    """
+    if not frames_data:
+        return {"most_fake": [], "most_real": []}
+
+    # Save to temp directory
+    if output_dir is None:
+        output_dir = tempfile.mkdtemp(prefix="deeptrace_frames_")
+    else:
+        os.makedirs(output_dir, exist_ok=True)
+
+    # Sort by fake_score - highest first
+    sorted_by_fake = sorted(frames_data, key=lambda x: x[2], reverse=True)
+    top3_fake = sorted_by_fake[:3]
+    
+    # Sort by fake_score - lowest first
+    sorted_by_real = sorted(frames_data, key=lambda x: x[2], reverse=False)
+    top3_real = sorted_by_real[:3]
+
+    result = {"most_fake": [], "most_real": []}
+
+    # Save most fake frames (red annotations)
+    for idx, (frame_num, frame_img, fake_score) in enumerate(top3_fake):
+        filename = f"most_fake_{idx+1}_frame{frame_num}.jpg"
+        path = os.path.join(output_dir, filename)
+
+        frame_copy = frame_img.copy()
+        real_score = round(100 - fake_score, 1)
+        score_text = f"Fake: {fake_score:.1f}%  Real: {real_score:.1f}%"
+        cv2.putText(
+            frame_copy, score_text,
+            (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+            0.8, (0, 0, 255),  # Red for suspicious
+            2, cv2.LINE_AA
+        )
+
+        cv2.imwrite(path, frame_copy)
+        result["most_fake"].append({
+            "path": path,
+            "frame_number": frame_num,
+            "fake_score": round(fake_score, 2),
+            "real_score": round(real_score, 2)
+        })
+
+    # Save most real frames (green annotations)
+    for idx, (frame_num, frame_img, fake_score) in enumerate(top3_real):
+        filename = f"most_real_{idx+1}_frame{frame_num}.jpg"
+        path = os.path.join(output_dir, filename)
+
+        frame_copy = frame_img.copy()
+        real_score = round(100 - fake_score, 1)
+        score_text = f"Fake: {fake_score:.1f}%  Real: {real_score:.1f}%"
+        cv2.putText(
+            frame_copy, score_text,
+            (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+            0.8, (0, 200, 0),  # Green for authentic
+            2, cv2.LINE_AA
+        )
+
+        cv2.imwrite(path, frame_copy)
+        result["most_real"].append({
+            "path": path,
+            "frame_number": frame_num,
+            "fake_score": round(fake_score, 2),
+            "real_score": round(real_score, 2)
+        })
+
+    return result
+
+
+############################################################
 #  ANALYZE VIDEO FOR DEEPFAKES
 ############################################################
 def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
     """
     Analyzes a video for deepfake detection.
+    Now returns key_frames as a dict with two lists: most_fake and most_real.
     
     Logic: Counts frames with fake score > 85%. If more than 60% of frames are highly fake, 
     the entire video is marked as FAKE. This approach is robust against occasional bad frames.
@@ -178,18 +267,13 @@ def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
             "overall_confidence": float (based on max fake score),
             "max_fake_score": float (highest fake score across all frames),
             "average_fake_score": float (mean fake score across all frames),
-            "frame_results": [
-                {
-                    "frame_number": int,
-                    "face_detected": bool,
-                    "prediction": str,
-                    "confidence": float,
-                    "fake_score": float
-                },
-                ...
-            ],
+            "frame_results": [...],
             "total_frames_analyzed": int,
-            "faces_detected": int
+            "faces_detected": int,
+            "key_frames": {
+                "most_fake": [{"path": str, "frame_number": int, "fake_score": float, "real_score": float}, ...],
+                "most_real": [{"path": str, "frame_number": int, "fake_score": float, "real_score": float}, ...]
+            }
         }
     """
     print(f"📹 Analyzing video: {video_path}")
@@ -203,6 +287,9 @@ def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
     fake_scores = []
     noise_scores = []
     faces_detected_count = 0
+    
+    # Store raw frame data for key frame saving: (frame_number, frame_image, fake_score)
+    frames_with_faces = []
     
     for frame_num, frame in frames:
         # Detect faces in frame
@@ -266,6 +353,9 @@ def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
             "fake_score": round(fake_score * 100, 2)
         })
         
+        # Store full frame (not just face crop) for key frame saving
+        frames_with_faces.append((frame_num, frame, fake_score * 100))
+        
         # Calculate noise level using Laplacian variance
         gray_face = cv2.cvtColor(face_crop, cv2.COLOR_BGR2GRAY)
         noise_score = cv2.Laplacian(gray_face, cv2.CV_64F).var()
@@ -283,6 +373,7 @@ def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
             "frame_results": frame_results,
             "total_frames_analyzed": len(frames),
             "faces_detected": 0,
+            "key_frames": {"most_fake": [], "most_real": []},
             "error": "No faces detected in any frame"
         }
     
@@ -294,7 +385,10 @@ def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
     high_fake_frames = sum(1 for s in fake_scores if s > 85)
     fake_frame_ratio = high_fake_frames / len(fake_scores)
     overall_verdict = "FAKE" if fake_frame_ratio > 0.6 else "REAL"
-    overall_confidence = fake_frame_ratio * 100 if overall_verdict == "FAKE" else (1 - fake_frame_ratio) * 10
+    overall_confidence = fake_frame_ratio * 100 if overall_verdict == "FAKE" else (1 - fake_frame_ratio) * 100
+    
+    # ✅ Save top 3 key frames based on verdict
+    key_frames = save_key_frames(frames_with_faces)
     
     print(f"✅ Analysis complete!")
     print(f"   Overall Verdict: {overall_verdict}")
@@ -303,6 +397,7 @@ def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
     print(f"   Average Fake Score: {average_fake_score:.2f}%")
     print(f"   Frames Analyzed: {len(frames)}")
     print(f"   Faces Detected: {faces_detected_count}")
+    print(f"   Key Frames Saved: {len(key_frames['most_fake'])} fake + {len(key_frames['most_real'])} real")
     
     return {
         "overall_verdict": overall_verdict,
@@ -313,7 +408,8 @@ def analyze_video(video_path: str, frame_interval: int = 5) -> Dict:
         "total_frames_analyzed": len(frames),
         "faces_detected": faces_detected_count,
         "noise_scores": noise_scores,
-        "frame_numbers": [r["frame_number"] for r in frame_results if r["face_detected"]]
+        "frame_numbers": [r["frame_number"] for r in frame_results if r["face_detected"]],
+        "key_frames": key_frames   # ← NEW: dict with "most_fake" and "most_real" lists
     }
 
 
@@ -356,13 +452,8 @@ if __name__ == "__main__":
             print("\n📊 RESULTS:")
             print(f"Overall Verdict: {result['overall_verdict']}")
             print(f"Confidence: {result['overall_confidence']}%")
-            print(f"Max Fake Score: {result['max_fake_score']}%")
-            print(f"Average Fake Score: {result['average_fake_score']}%")
-            print(f"Frames Analyzed: {result['total_frames_analyzed']}")
-            print(f"Faces Detected: {result['faces_detected']}")
-            print(f"\nFirst 3 frame results:")
-            for fr in result['frame_results'][:3]:
-                print(f"  Frame {fr['frame_number']}: {fr['prediction']} ({fr['confidence']}%)")
+            print(f"Most Fake Frames: {[kf['path'] for kf in result['key_frames']['most_fake']]}")
+            print(f"Most Real Frames: {[kf['path'] for kf in result['key_frames']['most_real']]}")
         else:
             print("⚠ No video files found in test_videos/")
             print("   Supported formats: .mp4, .avi, .mov")
