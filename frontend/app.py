@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 ############################################################
 #  CONFIGURATION
 ############################################################
-API_BASE_URL = "https://aeruginous-vizierial-teofila.ngrok-free.dev"
+API_BASE_URL = "http://localhost:8000"
 BACKEND_TIMEOUT = 300  # 5 minutes for analysis
 
 
